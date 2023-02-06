@@ -13,34 +13,41 @@ def search_city(query):
     '''
     url = f"{BASE_URI}/geo/1.0/direct?q={query}&limit=5"
     response = requests.get(url).json()
-    if not response:
-        return None
     if len(response) > 1:
         for i, value in enumerate(response):
-            print(f"{i+1}. {value['name']}, {value['country']}")
+            print(f"{i+1}. {value['name']},{value['country']}")
         print("Multiple matches found, which city did you mean?")
         idx = input()
         return response[int(idx)]
-    return response[0]
+    if len(response) == 1:
+        return response[0]
+    return None
 
 def weather_forecast(lat, lon):
     '''Return a 5-day weather forecast for the city, given its latitude and longitude.'''
-    url = f"{BASE_URI}/data/2.5/forecast?lat={lat}&lon={lon}&units=metric"
-    response = requests.get(url).json()
-    response = response["list"]
-    five_day_forecast = []
-    day = datetime.now() + timedelta(days=1)
-    for entry in response:
-        if entry.get("dt_txt").startswith(day.strftime("%Y-%m-%d")):
-            five_day_forecast.append(entry)
-            day = day + timedelta(days=1)
-    for entry in five_day_forecast:
-        dt_txt = pd.to_datetime(
-            entry.get("dt_txt"), format="%Y-%m-%d %H:%M:%S"
-            ).strftime("%Y-%m-%d")
-        temp = str(entry["main"]["temp"])
-        forecast = entry['weather'][0]['main']
-        print(f"{dt_txt}: {forecast} {temp} °C")
+    if isinstance(lat, float) and isinstance(lon, float):
+        url = f"{BASE_URI}/data/2.5/forecast?lat={lat}&lon={lon}&units=metric"
+        response = requests.get(url).json()
+        response = response["list"]
+        five_day_forecast = []
+        day = datetime.now() + timedelta(days=1)
+        for entry in response:
+            if entry.get("dt_txt").startswith(day.strftime("%Y-%m-%d")):
+                five_day_forecast.append(entry)
+                day = day + timedelta(days=1)
+        dict_list = []
+        for entry in five_day_forecast:
+            weather_di = {}
+            dt_txt = pd.to_datetime(
+                entry.get("dt_txt"), format="%Y-%m-%d %H:%M:%S"
+                ).strftime("%Y-%m-%d")
+            weather_di['date'] = dt_txt
+            weather_di['temp'] = str(entry["main"]["temp"])
+            weather_di['weather'] = entry['weather'][0]['main']
+            dict_list.append(weather_di)
+            print(f"{weather_di['date']}: {weather_di['weather']} {weather_di['temp']} °C")
+        return dict_list
+    return None
 
 def main():
     '''Ask user for a city and display weather forecast'''
