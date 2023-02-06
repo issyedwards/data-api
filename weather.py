@@ -18,7 +18,7 @@ def search_city(query):
             print(f"{i+1}. {value['name']},{value['country']}")
         print("Multiple matches found, which city did you mean?")
         idx = input()
-        return response[int(idx)]
+        return response[int(idx)-1]
     if len(response) == 1:
         return response[0]
     return None
